@@ -162,7 +162,7 @@ specification](https://www.w3.org/TR/trace-context/). It contains two
 identifiers - a `TraceId` and a `SpanId` - along with a set of common
 `TraceOptions` and system-specific `TraceState` values. `SpanContext` is
 represented as an interface, in order to be serializable into a wider variety of
-trace context wire formats. 
+trace context wire formats.
 
 `TraceId` A valid trace identifier is a 16-byte array with at least one
 non-zero byte.
@@ -177,7 +177,7 @@ boolean `recorded`
 
 `Tracestate` carries system-specific configuration data, represented as a list
 of key-value pairs. TraceState allows multiple tracing systems to participate in
-the same trace. 
+the same trace.
 
 `IsValid` is a boolean flag which returns true if the SpanContext has a non-zero
 TraceID and a non-zero SpanID.
@@ -234,6 +234,19 @@ empty by default:
 - `Attribute`s
 - `Link`s
 - `Event`s
+- `Resource`
+- `SpanID`
+- `Start timestamp`
+
+// TODO: There's a question about clock resolution when a user supplies a ts
+// compared to clock the tracer uses internally. For a case where the span is
+// out of band, e.g. logs to traces, there's nothing that can really be done
+// about this. However, imagine a scenario where at the start of an RPC call, we
+// do start = time.now(), parse the headers, then create a span with that
+// `start` timestamp. Is this a language specific thing, like in javascript
+// there's perfomance.now() and Date.now(), do we say "use performance.now() for
+// highest resolution timestamps" in the docs? Maybe there's a tracer.timenow()
+// function? I'm not quite sure what the solution is here.
 
 The `Tracer` MUST allow the caller to specify the new `Span`'s parent in the
 form of a `Span` or `SpanContext`. The `Tracer` SHOULD create each new `Span` as
@@ -378,7 +391,8 @@ with the `Span`).
 Call to `End` of a `Span` MUST not have any effects on child spans. Those may
 still be running and can be ended later.
 
-There MUST be no parameter.
+Parameters
+- (Optional) Timestamp to explicitly set the end timestamp
 
 This API MUST be non-blocking.
 
@@ -391,7 +405,7 @@ timestamps to the Span object:
 - The end time needs to be recorded when the operation is ended.
 
 Start and end time as well as Event's timestamps MUST be recorded at a time of a
-calling of corresponding API and MUST not be passed as an argument.
+calling of corresponding API and MAY as an argument.
 
 ## Status
 
